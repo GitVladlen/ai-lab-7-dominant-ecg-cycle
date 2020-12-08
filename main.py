@@ -108,11 +108,30 @@ for i in range(4):
     for j in range(4):
         R[i, j] = round(directed_hausdorff(norm_x[i], norm_x[j])[0], 3)
 
-text = '\n\nDistance Hausdorf:\n\n' + str(R) + '\n\n' + str(np.argmin(R.sum(axis=1)) + 1)
+index = np.argmin(R.sum(axis=1)) + 1
+text = '\n\nDistance Hausdorf:\n\n' + str(R) + '\n\n' + str(index)
 print(text)
 
+# Table
+from prettytable import PrettyTable
+
+table = PrettyTable()
+
+table.field_names = ["Rij", "1", "2", "3", "4"]
+
+for i, r in enumerate(R, 1):
+    # row = []
+    # row.append(str(i))
+    # row += r
+    a = [str(i)]
+    for j, c in enumerate(r, 1):
+        a.append(str(c))
+    table.add_row(a)
+
+tkinter.Label(root, text=str(table), font="Consolas 10").pack(side=tkinter.RIGHT)
+
 # Fig 1
-fig1 = Figure(figsize=(15, 3), dpi=100)
+fig1 = Figure(figsize=(10, 3), dpi=100)
 
 fig1.subplots_adjust(wspace=0, hspace=1)
 
@@ -134,10 +153,8 @@ canvas1.get_tk_widget().pack(side=tkinter.TOP,
                              # expand=1
                              )
 
-
-
 # Fig 2
-fig2 = Figure(figsize=(4, 4), dpi=100)
+fig2 = Figure(figsize=(8, 4), dpi=100)
 
 sub_plot_5 = fig2.add_subplot(121)
 sub_plot_6 = fig2.add_subplot(122)
@@ -148,7 +165,7 @@ plotting_dxdz(
     der_norm_x[1], norm_x[1],
     der_norm_x[2], norm_x[2],
     der_norm_x[3], norm_x[3],
-    1
+    index
 )
 
 fig2.subplots_adjust(wspace=0.5, hspace=1)
@@ -160,8 +177,6 @@ canvas2.get_tk_widget().pack(side=tkinter.BOTTOM,
                              fill=tkinter.X,
                              # expand=1
                              )
-
-tkinter.Label(root, text=text).pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
 root.mainloop()
 
