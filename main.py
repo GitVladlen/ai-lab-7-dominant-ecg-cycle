@@ -26,13 +26,15 @@ def plotting(p1, p2, p3, p4, x1, x2, x3, x4):
     p4.set_title('ЕКГ 4')
 
 
-def plotting_dxdz(p5, p6, x1, t1, x2, t2, x3, t3, x4, t4, dominant):
+def plotting_dxdz(p5, x1, t1, x2, t2, x3, t3, x4, t4):
     p5.plot(x1, t1, 'r')
     p5.plot(x2, t2, 'b')
     p5.plot(x3, t3, 'g')
     p5.plot(x4, t4, 'y')
     p5.set_title('Фазові портрети')
 
+
+def plotting_dxdz_dominant(p6, x1, t1, x2, t2, x3, t3, x4, t4, dominant):
     if dominant == 1:
         p6.plot(x1, t1, 'r', linewidth=9)
     else:
@@ -100,6 +102,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 root = tkinter.Tk()
+root.configure(background='white')
 # root.geometry("1200x300")
 root.wm_title("Визначення опорного циклу ЕКГ")
 
@@ -111,24 +114,6 @@ for i in range(4):
 index = np.argmin(R.sum(axis=1)) + 1
 text = '\n\nDistance Hausdorf:\n\n' + str(R) + '\n\n' + str(index)
 print(text)
-
-# Table
-from prettytable import PrettyTable
-
-table = PrettyTable()
-
-table.field_names = ["Rij", "1", "2", "3", "4"]
-
-for i, r in enumerate(R, 1):
-    # row = []
-    # row.append(str(i))
-    # row += r
-    a = [str(i)]
-    for j, c in enumerate(r, 1):
-        a.append(str(c))
-    table.add_row(a)
-
-tkinter.Label(root, text=str(table), font="Consolas 10").pack(side=tkinter.RIGHT)
 
 # Fig 1
 fig1 = Figure(figsize=(10, 3), dpi=100)
@@ -149,18 +134,66 @@ canvas1 = FigureCanvasTkAgg(fig1, master=root)
 canvas1.draw()
 
 canvas1.get_tk_widget().pack(side=tkinter.TOP,
-                             fill=tkinter.X,
-                             # expand=1
+                             fill=tkinter.BOTH,
+                             expand=1
                              )
 
-# Fig 2
-fig2 = Figure(figsize=(8, 4), dpi=100)
+# Phase figs panel
+panel = tkinter.PanedWindow(root)
+panel.configure(background='white')
+panel.pack(side=tkinter.BOTTOM,
+           fill=tkinter.BOTH,
+           expand=1
+           )
 
-sub_plot_5 = fig2.add_subplot(121)
-sub_plot_6 = fig2.add_subplot(122)
+# Fig 2
+fig2 = Figure(figsize=(5, 4), dpi=100)
+
+sub_plot_5 = fig2.add_subplot(111)
 
 plotting_dxdz(
-    sub_plot_5, sub_plot_6,
+    sub_plot_5,
+    der_norm_x[0], norm_x[0],
+    der_norm_x[1], norm_x[1],
+    der_norm_x[2], norm_x[2],
+    der_norm_x[3], norm_x[3]
+)
+
+fig2.subplots_adjust(wspace=0.5, hspace=1)
+
+canvas2 = FigureCanvasTkAgg(fig2, master=panel)
+canvas2.draw()
+
+canvas2.get_tk_widget().pack(side=tkinter.LEFT,
+                             fill=tkinter.BOTH,
+                             expand=1
+                             )
+
+# Table
+from prettytable import PrettyTable
+
+table = PrettyTable()
+
+table.field_names = ["Rij", "1", "2", "3", "4"]
+
+for i, r in enumerate(R, 1):
+    # row = []
+    # row.append(str(i))
+    # row += r
+    a = [str(i)]
+    for j, c in enumerate(r, 1):
+        a.append(str(c))
+    table.add_row(a)
+
+
+
+# Fig 3
+fig3 = Figure(figsize=(5, 4), dpi=100)
+
+sub_plot_6 = fig3.add_subplot(111)
+
+plotting_dxdz_dominant(
+    sub_plot_6,
     der_norm_x[0], norm_x[0],
     der_norm_x[1], norm_x[1],
     der_norm_x[2], norm_x[2],
@@ -168,15 +201,17 @@ plotting_dxdz(
     index
 )
 
-fig2.subplots_adjust(wspace=0.5, hspace=1)
+fig3.subplots_adjust(wspace=0.5, hspace=1)
 
-canvas2 = FigureCanvasTkAgg(fig2, master=root)
-canvas2.draw()
+canvas3 = FigureCanvasTkAgg(fig3, master=panel)
+canvas3.draw()
 
-canvas2.get_tk_widget().pack(side=tkinter.BOTTOM,
-                             fill=tkinter.X,
-                             # expand=1
+canvas3.get_tk_widget().pack(side=tkinter.RIGHT,
+                             fill=tkinter.BOTH,
+                             expand=1
                              )
+
+tkinter.Label(panel, background='white', text=str(table), font="Consolas 10").pack(side=tkinter.RIGHT)
 
 root.mainloop()
 
