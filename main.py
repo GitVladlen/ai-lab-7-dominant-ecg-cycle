@@ -1,5 +1,8 @@
+import tkinter
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import directed_hausdorff
 
 
@@ -57,22 +60,6 @@ def plotting_dxdz_dominant(p6, x1, t1, x2, t2, x3, t3, x4, t4, dominant):
     p6.set_title('З домінантим сигналом')
 
 
-# def plot(p1, p2, p3, p4, p5, p6, x, norm_x, der_norm_x):
-#     plotting(
-#         p1, p2, p3, p4
-#         , x[0], x[1], x[2], x[3]
-#     )
-#     # plotting(x[0], x[1], x[2], x[3])
-#     plotting_dxdz(
-#         p5, p6,
-#         der_norm_x[0], norm_x[0],
-#         der_norm_x[1], norm_x[1],
-#         der_norm_x[2], norm_x[2],
-#         der_norm_x[3], norm_x[3],
-#         1
-#     )
-
-
 def derivat(x):
     z = []
     len_x = len(x)
@@ -92,28 +79,27 @@ def normalize(x):
     z = ((x - min(x)) / (max(x) - min(x)))
     return z
 
-
+# prepare data
 x = np.array([read_from_file(str(i + 1) + '.txt') for i in range(4)])
 norm_x = np.array([normalize(x[i]).reshape(len(x[i]), 1) for i in range(len(x))])
 der_norm_x = np.array([normalize(derivat(x[i])) for i in range(len(x))])
 
-import tkinter
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-
-root = tkinter.Tk()
-root.configure(background='white')
-# root.geometry("1200x300")
-root.wm_title("Визначення опорного циклу ЕКГ")
-
+# calc distances
 R = np.zeros((4, 4))
 for i in range(4):
     for j in range(4):
         R[i, j] = round(directed_hausdorff(norm_x[i], norm_x[j])[0], 3)
 
 index = np.argmin(R.sum(axis=1)) + 1
+
+# prepare table text
 text = '\n\nDistance Hausdorf:\n\n' + str(R) + '\n\n' + str(index)
 print(text)
+
+# visualization
+root = tkinter.Tk()
+root.configure(background='white')
+root.wm_title("Визначення опорного циклу ЕКГ")
 
 # Fig 1
 fig1 = Figure(figsize=(10, 3), dpi=100)
