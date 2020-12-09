@@ -4,7 +4,7 @@ from matplotlib.figure import Figure
 
 import numpy as np
 from scipy.spatial.distance import directed_hausdorff
-
+import math
 
 def read_from_file(file_name):
     f = open(file_name, 'r')
@@ -38,6 +38,11 @@ def plotting_dxdz(p5, x1, t1, x2, t2, x3, t3, x4, t4):
 
 
 def plotting_dxdz_dominant(p6, x1, t1, x2, t2, x3, t3, x4, t4, dominant):
+    if dominant == 4:
+        p6.plot(x4, t4, 'y', linewidth=9)
+    else:
+        p6.plot(x4, t4, 'y')
+        
     if dominant == 1:
         p6.plot(x1, t1, 'r', linewidth=9)
     else:
@@ -53,10 +58,7 @@ def plotting_dxdz_dominant(p6, x1, t1, x2, t2, x3, t3, x4, t4, dominant):
     else:
         p6.plot(x3, t3, 'g')
 
-    if dominant == 4:
-        p6.plot(x4, t4, 'y', linewidth=9)
-    else:
-        p6.plot(x4, t4, 'y')
+
     p6.set_title('З домінантим сигналом')
 
 
@@ -84,11 +86,42 @@ x = np.array([read_from_file(str(i + 1) + '.txt') for i in range(4)])
 norm_x = np.array([normalize(x[i]).reshape(len(x[i]), 1) for i in range(len(x))])
 der_norm_x = np.array([normalize(derivat(x[i])) for i in range(len(x))])
 
+def calc_euclidean_distance(x1, y1, x2, y2):
+    return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+def calc_hausdorff_distance(u_x_arr, u_y_arr, v_x_arr, v_y_arr):
+    min_euclidean_distances = []
+    for u_x, u_y in zip(u_x_arr, u_y_arr):
+        euclidean_distances = []
+        for v_x, v_y in zip(v_x_arr, v_y_arr):
+            euclidean_distance = calc_euclidean_distance(u_x, u_y, v_x, v_y)
+            euclidean_distances.append(euclidean_distance)
+        min_euclidean_distance = min(euclidean_distances)
+        min_euclidean_distances.append(min_euclidean_distance)
+    a = max(min_euclidean_distances)
+
+    min_euclidean_distances = []
+    for v_x, v_y in zip(v_x_arr, v_y_arr):
+        euclidean_distances = []
+        for u_x, u_y in zip(u_x_arr, u_y_arr):
+            euclidean_distance = calc_euclidean_distance(u_x, u_y, v_x, v_y)
+            euclidean_distances.append(euclidean_distance)
+        min_euclidean_distance = min(euclidean_distances)
+        min_euclidean_distances.append(min_euclidean_distance)
+    b = max(min_euclidean_distances)
+
+    hausdorff_distance = max(a, b)
+    return hausdorff_distance
+
+
+r = round(calc_hausdorff_distance(norm_x[0], der_norm_x[0], norm_x[0], der_norm_x[0]), 3)
+
 # calc distances
 R = np.zeros((4, 4))
 for i in range(4):
     for j in range(4):
-        R[i, j] = round(directed_hausdorff(norm_x[i], norm_x[j])[0], 3)
+        # R[i, j] = round(directed_hausdorff(norm_x[i], norm_x[j])[0], 3)
+        R[i, j] = round(calc_hausdorff_distance(norm_x[i], der_norm_x[i], norm_x[j], der_norm_x[j]), 3)
 
 index = np.argmin(R.sum(axis=1)) + 1
 
@@ -133,7 +166,7 @@ panel.pack(side=tkinter.BOTTOM,
            )
 
 # Fig 2
-fig2 = Figure(figsize=(5, 4), dpi=100)
+fig2 = Figure(figsize=(4, 4), dpi=100)
 
 sub_plot_5 = fig2.add_subplot(111)
 
@@ -160,21 +193,27 @@ from prettytable import PrettyTable
 
 table = PrettyTable()
 
-table.field_names = ["Rij", "1", "2", "3", "4"]
+table.field_names = ["Rij", "1", "2", "3", "4", "Sum"]
 
 for i, r in enumerate(R, 1):
     # row = []
     # row.append(str(i))
     # row += r
-    a = [str(i)]
+    ind = str(i)
+    if index == i:
+        ind = "[" + str(i) + "]"
+    a = [ind]
+    sum = 0
     for j, c in enumerate(r, 1):
         a.append(str(c))
+        sum += c
+    a.append(str(round(sum,3)))
     table.add_row(a)
 
 
 
 # Fig 3
-fig3 = Figure(figsize=(5, 4), dpi=100)
+fig3 = Figure(figsize=(4, 4), dpi=100)
 
 sub_plot_6 = fig3.add_subplot(111)
 
